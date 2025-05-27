@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Chatbot Trainer - Standalone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .api-key-section {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .api-key-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .api-key-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .api-key-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .api-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            display: none;
+        }
+
+        .api-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .api-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .personality-section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .personality-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .personality-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s ease;
+        }
+
+        .personality-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            background: #4facfe;
+            color: white;
+            border-color: #4facfe;
+        }
+
+        .chat-section {
+            padding: 30px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background: #4facfe;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .bot-message {
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            margin-right: auto;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 25px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .send-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+        }
+
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .clear-btn:hover {
+            background: #5a6268;
+        }
+
+        .disabled-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #666;
+            border-radius: 10px;
+        }
+
+        .chat-section {
+            position: relative;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .preset-buttons {
+                flex-direction: column;
+            }
+            
+            .input-section {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 HR Chatbot Trainer</h1>
+            <p>Create your personalized HR assistant with custom personality</p>
+        </div>
+
+        <div class="api-key-section">
+            <h3>🔑 OpenAI API Key</h3>
+            <input 
+                type="password" 
+                id="apiKeyInput" 
+                class="api-key-input" 
+                placeholder="Enter your OpenAI API key (sk-...)"
+                onchange="validateApiKey()"
+            >
+            <div id="apiStatus" class="api-status"></div>
+        </div>
+
+        <div class="personality-section">
+            <h2>🎭 Chatbot Personality</h2>
+            <textarea 
+                id="personalityInput" 
+                class="personality-input" 
+                placeholder="Describe how you want your chatbot to behave. For example: 'You are a friendly and empathetic HR assistant who speaks in a warm, professional tone. You always provide actionable advice and ask follow-up questions to better understand employee needs.'"
+            >You are a helpful and friendly HR assistant. You provide clear, professional, and empathetic responses to HR-related questions. You always maintain confidentiality and offer practical solutions.</textarea>
+            
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setPersonality('friendly')">😊 Friendly & Warm</button>
+                <button class="preset-btn" onclick="setPersonality('professional')">💼 Strictly Professional</button>
+                <button class="preset-btn" onclick="setPersonality('mentor')">🎓 Mentor & Coach</button>
+                <button class="preset-btn" onclick="setPersonality('casual')">😎 Casual & Relaxed</button>
+                <button class="preset-btn" onclick="setPersonality('detailed')">📋 Detailed & Thorough</button>
+            </div>
+        </div>
+
+        <div class="chat-section">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    👋 Hi! I'm your HR chatbot trainer. Enter your OpenAI API key above, set my personality, then start chatting to see how I respond!
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">🤔 Thinking...</div>
+            
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="Type your message here..."
+                    onkeypress="handleKeyPress(event)"
+                    disabled
+                >
+                <button onclick="sendMessage()" class="send-btn" id="sendBtn" disabled>Send</button>
+                <button onclick="clearChat()" class="clear-btn">Clear</button>
+            </div>
+            
+            <div id="disabledOverlay" class="disabled-overlay">
+                Enter your OpenAI API key above to start chatting
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversationHistory = [];
+        let apiKey = '';
+
+        const personalities = {
+            friendly: "You are an extremely friendly and warm HR assistant. You use emojis occasionally, speak in a caring tone, and always try to make employees feel comfortable and supported. You're like a helpful friend who happens to be great at HR.",
+            professional: "You are a strictly professional HR assistant. You provide clear, concise, and formal responses. You maintain professional boundaries while being helpful and informative. Your tone is respectful and business-appropriate at all times.",
+            mentor: "You are an HR mentor and coach. You don't just answer questions - you guide people to discover solutions themselves. You ask thoughtful follow-up questions, share wisdom from experience, and help employees grow professionally.",
+            casual: "You are a laid-back and casual HR assistant. You speak in a relaxed, conversational tone like you're chatting with a colleague. You're still helpful and knowledgeable, but you keep things light and approachable.",
+            detailed: "You are a thorough and detail-oriented HR assistant. You provide comprehensive answers with step-by-step guidance, relevant policies, and additional resources. You anticipate follow-up questions and address them proactively."
+        };
+
+        function setPersonality(type) {
+            document.getElementById('personalityInput').value = personalities[type];
+        }
+
+        function validateApiKey() {
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const apiStatus = document.getElementById('apiStatus');
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const overlay = document.getElementById('disabledOverlay');
+            
+            apiKey = apiKeyInput.value.trim();
+            
+            if (apiKey.startsWith('sk-') && apiKey.length > 20) {
+                apiStatus.className = 'api-status success';
+                apiStatus.textContent = '✅ API key format looks valid';
+                apiStatus.style.display = 'block';
+                
+                // Enable chat
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                overlay.style.display = 'none';
+                messageInput.focus();
+            } else if (apiKey.length > 0) {
+                apiStatus.className = 'api-status error';
+                apiStatus.textContent = '❌ Invalid API key format. Should start with "sk-"';
+                apiStatus.style.display = 'block';
+                
+                // Disable chat
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                overlay.style.display = 'flex';
+            } else {
+                apiStatus.style.display = 'none';
+                
+                // Disable chat
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                overlay.style.display = 'flex';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message || !apiKey) return;
+
+            const personality = document.getElementById('personalityInput').value.trim();
+            const sendBtn = document.getElementById('sendBtn');
+            const loading = document.getElementById('loading');
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            messageInput.value = '';
+
+            // Show loading and disable send button
+            loading.style.display = 'block';
+            sendBtn.disabled = true;
+
+            try {
+                // Build conversation messages
+                const messages = [
+                    { 
+                        role: 'system', 
+                        content: personality || "You are a helpful and friendly HR assistant. You provide clear, professional, and empathetic responses to HR-related questions."
+                    },
+                    ...conversationHistory,
+                    { role: 'user', content: message }
+                ];
+
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: messages,
+                        max_tokens: 500,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const botResponse = data.choices[0].message.content;
+
+                addMessage(botResponse, 'bot');
+                
+                // Update conversation history
+                conversationHistory.push(
+                    { role: 'user', content: message },
+                    { role: 'assistant', content: botResponse }
+                );
+                
+                // Keep conversation history manageable (last 10 exchanges)
+                if (conversationHistory.length > 20) {
+                    conversationHistory = conversationHistory.slice(-20);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                let errorMessage = '❌ Sorry, I encountered an error: ';
+                
+                if (error.message.includes('401')) {
+                    errorMessage += 'Invalid API key. Please check your OpenAI API key.';
+                } else if (error.message.includes('429')) {
+                    errorMessage += 'Rate limit exceeded. Please wait a moment and try again.';
+                } else if (error.message.includes('insufficient_quota')) {
+                    errorMessage += 'API quota exceeded. Please check your OpenAI billing.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                addMessage(errorMessage, 'bot');
+            }
+
+            // Hide loading and enable send button
+            loading.style.display = 'none';
+            sendBtn.disabled = false;
+            messageInput.focus();
+        }
+
+        function addMessage(text, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function clearChat() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '<div class="message bot-message">👋 Chat cleared! Ready for a fresh conversation.</div>';
+            conversationHistory = [];
+        }
+
+        // Focus on API key input when page loads
+        window.onload = function() {
+            document.getElementById('apiKeyInput').focus();
+        };
+    </script>
+</body>
+</html> 
