@@ -1,0 +1,21 @@
+{
+  "name": "hr-chatbot-api",
+  "version": "1.0.0",
+  "description": "Backend API for HR chatbot training",
+  "main": "api/chat.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "openai": "^4.20.1",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["chatbot", "hr", "openai", "api"],
+  "author": "Your Name",
+  "license": "MIT"
+} 
